@@ -1,5 +1,6 @@
 package com.finnit.backend.service;
 
+import com.finnit.backend.dto.TokenResponse;
 import com.finnit.backend.entity.RefreshToken;
 import com.finnit.backend.entity.User;
 import com.finnit.backend.repository.RefreshTokenRepository;
@@ -20,12 +21,17 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository repository;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final JwtService jwtService;
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
-    public RefreshTokenService(RefreshTokenRepository repository) {
+    public RefreshTokenService(
+            RefreshTokenRepository repository,
+            JwtService jwtService
+    ) {
         this.repository = repository;
+        this.jwtService = jwtService;
     }
 
     private String generateRandomToken() {
@@ -51,7 +57,41 @@ public class RefreshTokenService {
 
     @Transactional
     public String createRefreshToken(User user) {
+        return saveNewRefreshToken(user);
+    }
 
+    @Transactional
+    public TokenResponse rotateRefreshToken(String rawToken) {
+
+        RefreshToken storedToken = repository
+                .findByTokenHashForUpdate(hashToken(rawToken))
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid refresh token"));
+
+        if (storedToken.isRevoked()
+                || !storedToken.getExpiresAt().isAfter(Instant.now())) {
+            throw new IllegalArgumentException(
+                    "Expired or revoked refresh token");
+        }
+
+        User user = storedToken.getUser();
+
+        storedToken.setRevoked(true);
+
+        String newRefreshToken = saveNewRefreshToken(user);
+
+        String newAccessToken = jwtService.generateAccessToken(user.getId());
+
+        return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    @Transactional
+    public void revokeRefreshToken(String rawToken) {
+        repository.findByTokenHash(hashToken(rawToken))
+                .ifPresent(token -> token.setRevoked(true));
+    }
+
+    private String saveNewRefreshToken(User user) {
         String rawToken = generateRandomToken();
 
         RefreshToken refreshToken = new RefreshToken(
@@ -65,27 +105,5 @@ public class RefreshTokenService {
         return rawToken;
     }
 
-    @Transactional
-    public User rotateRefreshToken(String rawToken) {
 
-        RefreshToken storedToken = repository
-                .findByTokenHash(hashToken(rawToken))
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Invalid refresh token"));
-
-        if (storedToken.isRevoked()
-                || storedToken.getExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalArgumentException("Expired or revoked refresh token");
-        }
-
-        storedToken.setRevoked(true);
-
-        return storedToken.getUser();
-    }
-
-    @Transactional
-    public void revokeRefreshToken(String rawToken) {
-        repository.findByTokenHash(hashToken(rawToken))
-                .ifPresent(token -> token.setRevoked(true));
-    }
 }

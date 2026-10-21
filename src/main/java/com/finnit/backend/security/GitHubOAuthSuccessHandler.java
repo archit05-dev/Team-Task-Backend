@@ -4,6 +4,7 @@ package com.finnit.backend.security;
 import com.finnit.backend.entity.User;
 import com.finnit.backend.service.AuthService;
 import com.finnit.backend.service.JwtService;
+import com.finnit.backend.service.OAuthCodeService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,13 +20,16 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final OAuthCodeService oauthCodeService;
 
     public GitHubOAuthSuccessHandler(
             AuthService authService,
-            JwtService jwtService
+            JwtService jwtService,
+            OAuthCodeService oauthCodeService
     ) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.oauthCodeService = oauthCodeService;
     }
 
     @Override
@@ -40,13 +44,14 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
 
         User user = authService.processGitHubUser(oauth2User);
 
-        String accessToken = jwtService.generateAccessToken(
-                user.getId()
+        String code = oauthCodeService.createCode(user);
+
+        response.sendRedirect(
+                "http://localhost:3000?code=" +
+                        java.net.URLEncoder.encode(
+                                code,
+                                java.nio.charset.StandardCharsets.UTF_8
+                        )
         );
-
-
-
-        //Temporary until jwt is added
-        response.sendRedirect("http://localhost:3000");
     }
 }

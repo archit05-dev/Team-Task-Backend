@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/error",
+                                "/api/auth/exchange",
                                 "/api/auth/refresh",
                                 "/api/auth/logout"
                         ).permitAll()
