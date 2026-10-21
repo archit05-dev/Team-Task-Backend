@@ -1,7 +1,9 @@
 
 package com.finnit.backend.security;
 
+import com.finnit.backend.entity.User;
 import com.finnit.backend.service.AuthService;
+import com.finnit.backend.service.JwtService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,9 +18,14 @@ import java.io.IOException;
 public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     private final AuthService authService;
+    private final JwtService jwtService;
 
-    public GitHubOAuthSuccessHandler(AuthService authService) {
+    public GitHubOAuthSuccessHandler(
+            AuthService authService,
+            JwtService jwtService
+    ) {
         this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -31,8 +38,13 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
 
+        User user = authService.processGitHubUser(oauth2User);
 
-        authService.processGitHubUser(oauth2User);
+        String accessToken = jwtService.generateAccessToken(
+                user.getId()
+        );
+
+
 
         //Temporary until jwt is added
         response.sendRedirect("http://localhost:3000");
