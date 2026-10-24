@@ -46,6 +46,9 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
 
         String code = oauthCodeService.createCode(user);
 
+
+        System.out.println("OAuth principal name: " + authentication.getName());
+
         response.sendRedirect(
                 "http://localhost:3000?code=" +
                         java.net.URLEncoder.encode(
