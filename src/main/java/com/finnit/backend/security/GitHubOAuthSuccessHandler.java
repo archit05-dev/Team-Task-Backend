@@ -50,11 +50,12 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
         System.out.println("OAuth principal name: " + authentication.getName());
 
         response.sendRedirect(
-                "http://localhost:3000?code=" +
+                "https://team-task-frontend-henna.vercel.app/?code=" +
                         java.net.URLEncoder.encode(
                                 code,
                                 java.nio.charset.StandardCharsets.UTF_8
-                        )
+                        ) +
+                        "#onboarding"
         );
     }
 }
