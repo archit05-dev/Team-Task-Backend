@@ -32,22 +32,18 @@ public class RecommendationService {
             String principalName,
             OnboardingRequest request
     ) {
-        // Fetch the user's public repositories
+
         List<Map<String, Object>> repositories =
                 gitHubRepositoryService.getPublicRepositories(principalName);
 
-        // Build the user's profile for the ML models
         Map<String, Object> profile =
                 mlProfileService.buildProfile(request, repositories);
 
-        // Model 1 generates recommendation tags
         List<String> tags = mlService.generateTags(profile);
 
-        // Model 2 returns ranked repository names
         List<String> recommendedRepositories =
                 mlService.getRecommendations(profile);
 
-        // Resolve repository names into GitHub repository details
         List<Map<String, Object>> enrichedRecommendations =
                 new ArrayList<>();
 

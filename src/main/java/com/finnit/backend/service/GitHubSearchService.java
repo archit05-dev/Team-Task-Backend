@@ -27,7 +27,7 @@ public class GitHubSearchService {
             String principalName,
             String repositoryName
     ) {
-        // Load the GitHub OAuth client
+
         OAuth2AuthorizedClient client =
                 authorizedClientService.loadAuthorizedClient(
                         "github",
@@ -40,15 +40,12 @@ public class GitHubSearchService {
             );
         }
 
-        // Get the GitHub access token
         String accessToken =
                 client.getAccessToken().getTokenValue();
 
-        // Build the GET request
         RestClient.RequestHeadersUriSpec<?> requestBuilder =
                 gitHubRestClient.get();
 
-        // Add the URL and query parameters
         RestClient.RequestHeadersSpec<?> request =
                 requestBuilder.uri(uriBuilder -> uriBuilder
                         .path("/search/repositories")
@@ -56,10 +53,8 @@ public class GitHubSearchService {
                         .queryParam("per_page", 100)
                         .build());
 
-        // Add the authorization header separately
         request.header("Authorization", "Bearer " + accessToken);
 
-        // Retrieve the response
         Map<String, Object> response =
                 request.retrieve()
                         .body(new ParameterizedTypeReference<
@@ -75,7 +70,6 @@ public class GitHubSearchService {
             return null;
         }
 
-        // Find an exact repository name match
         for (Object item : items) {
             if (!(item instanceof Map<?, ?> repository)) {
                 continue;

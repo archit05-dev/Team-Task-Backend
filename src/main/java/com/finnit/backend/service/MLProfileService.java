@@ -21,7 +21,6 @@ public class MLProfileService {
         Set<String> topics = new LinkedHashSet<>();
         List<String> descriptions = new ArrayList<>();
 
-        // Extract information from the user's GitHub repositories.
         for (Map<String, Object> repository : repositories) {
 
             Object language = repository.get("language");

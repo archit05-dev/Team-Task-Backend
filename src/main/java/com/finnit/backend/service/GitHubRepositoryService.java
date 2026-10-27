@@ -28,7 +28,6 @@ public class GitHubRepositoryService {
             String principalName
     ) {
 
-        // Load the GitHub OAuth client
         OAuth2AuthorizedClient client =
                 authorizedClientService.loadAuthorizedClient(
                         "github",
@@ -41,7 +40,7 @@ public class GitHubRepositoryService {
             );
         }
 
-        // Get the access token
+
         String accessToken =
                 client.getAccessToken().getTokenValue();
 
